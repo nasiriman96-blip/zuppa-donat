@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
-  AreaChart, Area, XAxis, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import {
   Sun, Moon, Plus, Minus, X, Search, ArrowUpRight, ArrowDownLeft,
@@ -504,6 +504,19 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
     return transactions.filter((tx) => tx.type === "penjualan" && new Date(tx.date).toDateString() === today).length;
   }, [transactions]);
 
+  const categoryToday = useMemo(() => {
+    const today = new Date().toDateString();
+    const totals = { zuppa: 0, donat: 0 };
+    transactions
+      .filter((tx) => tx.type === "penjualan" && new Date(tx.date).toDateString() === today)
+      .forEach((tx) => {
+        (tx.items || []).forEach((it) => {
+          if (totals[it.category] !== undefined) totals[it.category] += it.price * it.qty;
+        });
+      });
+    return totals;
+  }, [transactions]);
+
   const cartItems = cart.map((c) => {
     if (c.manual) return { id: c.id, name: c.name, price: c.price, cost: c.cost || 0, kind: "manual", qty: c.qty };
     return { ...(products.find((p) => p.id === c.id) || {}), qty: c.qty };
@@ -667,7 +680,11 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
                 chartData={chartData}
                 todayRevenue={todayRevenue}
                 todayCount={todayCount}
+                categoryToday={categoryToday}
                 transactions={transactions.slice(0, 5)}
+                userEmail={userEmail}
+                onOpenSheet={(s) => setSheet(s)}
+                onNavigate={(t) => setTab(t)}
               />
             )}
             {tab === "kasir" && (
@@ -723,6 +740,9 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
               </button>
             );
           })}
+          <button className="mb-navitem-fab" onClick={() => setTab("kasir")} aria-label="Jual cepat">
+            <Plus size={24} />
+          </button>
         </div>
 
       {/* ---- Sheets ---- */}
@@ -1235,32 +1255,52 @@ function EditTxForm({ tx, onSubmit }) {
 /* Screens                                                            */
 /* ---------------------------------------------------------------- */
 
-function Dashboard({ wallets, chartData, todayRevenue, todayCount, transactions }) {
+function Dashboard({ wallets, chartData, todayRevenue, todayCount, categoryToday, transactions, userEmail, onOpenSheet, onNavigate }) {
   const dateStr = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
+  const totalSaldo = wallets.zuppa_modal + wallets.zuppa_untung + wallets.donat_modal + wallets.donat_untung;
+  const initial = (userEmail || "?").charAt(0).toUpperCase();
+
+  const donutTotal = categoryToday.zuppa + categoryToday.donat;
+  const donutData = [
+    { name: "Zuppa", value: categoryToday.zuppa, color: "var(--gold)" },
+    { name: "Donat", value: categoryToday.donat, color: "var(--teal)" },
+  ];
+
   return (
     <div className="mb-screen">
-      <div className="mb-greeting">
-        <div className="mb-greeting-text">{getGreeting()}</div>
-        <div className="mb-greeting-date">{dateStr}</div>
+      <div className="mb-greeting" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div className="mb-greeting-text">{getGreeting()} 👋</div>
+          <div className="mb-greeting-date">{dateStr}</div>
+        </div>
+        <div className="mb-logo" style={{ width: 40, height: 40 }}>{initial}</div>
       </div>
 
-      <div className="mb-balance-row">
-        <div className="mb-balance-card zuppa_modal">
-          <div className="mb-balance-top"><Cat size={18} /><span>Zuppa Modal</span></div>
-          <div className="mb-balance-amount"><AnimatedNumber value={wallets.zuppa_modal} /></div>
+      <div className="mb-hero-card">
+        <div className="mb-hero-top"><span>Total Saldo Semua Dompet</span></div>
+        <div className="mb-hero-amount"><AnimatedNumber value={totalSaldo} /></div>
+        <div className="mb-hero-sub">
+          <ShoppingBag size={13} /> {todayCount} transaksi hari ini
         </div>
-        <div className="mb-balance-card zuppa_untung">
-          <div className="mb-balance-top"><Coins size={18} /><span>Zuppa Untung</span></div>
-          <div className="mb-balance-amount"><AnimatedNumber value={wallets.zuppa_untung} /></div>
-        </div>
-        <div className="mb-balance-card donat_modal">
-          <div className="mb-balance-top"><Cat size={18} /><span>Donat Modal</span></div>
-          <div className="mb-balance-amount"><AnimatedNumber value={wallets.donat_modal} /></div>
-        </div>
-        <div className="mb-balance-card donat_untung">
-          <div className="mb-balance-top"><Coins size={18} /><span>Donat Untung</span></div>
-          <div className="mb-balance-amount"><AnimatedNumber value={wallets.donat_untung} /></div>
-        </div>
+      </div>
+
+      <div className="mb-quick-row">
+        <button className="mb-quick-btn" onClick={() => onNavigate("kasir")}>
+          <div className="mb-quick-icon"><ShoppingBag size={20} /></div>
+          <span className="mb-quick-label">Jual</span>
+        </button>
+        <button className="mb-quick-btn" onClick={() => onOpenSheet("addModal")}>
+          <div className="mb-quick-icon"><ArrowDownLeft size={20} /></div>
+          <span className="mb-quick-label">Setor</span>
+        </button>
+        <button className="mb-quick-btn" onClick={() => onOpenSheet("withdraw")}>
+          <div className="mb-quick-icon"><ArrowUpRight size={20} /></div>
+          <span className="mb-quick-label">Tarik</span>
+        </button>
+        <button className="mb-quick-btn" onClick={() => onNavigate("dompet")}>
+          <div className="mb-quick-icon"><Wallet size={20} /></div>
+          <span className="mb-quick-label">Dompet</span>
+        </button>
       </div>
 
       <div className="mb-stats-row">
@@ -1272,6 +1312,34 @@ function Dashboard({ wallets, chartData, todayRevenue, todayCount, transactions 
           <div className="mb-stat-label">Transaksi hari ini</div>
           <div className="mb-stat-value">{todayCount}</div>
         </div>
+      </div>
+
+      <div className="mb-card">
+        <div className="mb-card-head"><h4>Penjualan Hari Ini</h4></div>
+        {donutTotal === 0 ? (
+          <div className="mb-empty" style={{ padding: "18px 0" }}><ShoppingBag size={26} /><p>Belum ada penjualan hari ini</p></div>
+        ) : (
+          <div className="mb-donut-wrap">
+            <div style={{ width: 110, height: 110, flexShrink: 0 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={donutData} dataKey="value" innerRadius={32} outerRadius={50} paddingAngle={3} stroke="none">
+                    {donutData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mb-donut-legend">
+              {donutData.map((d) => (
+                <div className="mb-donut-legend-row" key={d.name}>
+                  <span className="mb-donut-dot" style={{ background: d.color }} />
+                  <span className="mb-donut-legend-label">{d.name}</span>
+                  <span className="mb-donut-legend-pct">{donutTotal > 0 ? Math.round((d.value / donutTotal) * 100) : 0}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-card">
@@ -1305,6 +1373,28 @@ function Dashboard({ wallets, chartData, todayRevenue, todayCount, transactions 
         <div className="mb-legend">
           <span><i style={{ background: "var(--green)" }} />Masuk</span>
           <span><i style={{ background: "var(--red)" }} />Keluar</span>
+        </div>
+      </div>
+
+      <div className="mb-card">
+        <div className="mb-card-head"><h4>Rincian Saldo Dompet</h4></div>
+        <div className="mb-balance-row">
+          <div className="mb-balance-card zuppa_modal">
+            <div className="mb-balance-top"><Cat size={18} /><span>Zuppa Modal</span></div>
+            <div className="mb-balance-amount"><AnimatedNumber value={wallets.zuppa_modal} /></div>
+          </div>
+          <div className="mb-balance-card zuppa_untung">
+            <div className="mb-balance-top"><Coins size={18} /><span>Zuppa Untung</span></div>
+            <div className="mb-balance-amount"><AnimatedNumber value={wallets.zuppa_untung} /></div>
+          </div>
+          <div className="mb-balance-card donat_modal">
+            <div className="mb-balance-top"><Cat size={18} /><span>Donat Modal</span></div>
+            <div className="mb-balance-amount"><AnimatedNumber value={wallets.donat_modal} /></div>
+          </div>
+          <div className="mb-balance-card donat_untung">
+            <div className="mb-balance-top"><Coins size={18} /><span>Donat Untung</span></div>
+            <div className="mb-balance-amount"><AnimatedNumber value={wallets.donat_untung} /></div>
+          </div>
         </div>
       </div>
 
