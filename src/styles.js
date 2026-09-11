@@ -91,12 +91,6 @@ button, input, select, textarea {
 .mb-hero-amount { font-size:28px; font-weight:800; letter-spacing:-.5px; margin-bottom:14px; }
 .mb-hero-sub { display:flex; align-items:center; gap:8px; font-size:12.5px; opacity:.85; background: rgba(255,255,255,0.14); border-radius:100px; padding:6px 12px; width:fit-content; }
 
-.mb-quick-row { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; margin-top:-26px; position:relative; z-index:2; }
-.mb-quick-btn { display:flex; flex-direction:column; align-items:center; gap:6px; background:none; cursor:pointer; font-family:inherit; }
-.mb-quick-icon { width:52px; height:52px; border-radius:18px; background: var(--surface); border:1px solid var(--border); color: var(--gold); display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 18px rgba(76,57,163,0.14); transition: transform .15s ease; }
-.mb-quick-btn:active .mb-quick-icon { transform: scale(0.9); }
-.mb-quick-label { font-size:11.5px; font-weight:700; color: var(--ink-soft); }
-
 .mb-balance-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
 .mb-balance-card { border-radius:20px; padding:14px; color:#fff; position:relative; overflow:hidden; }
 .mb-balance-card.zuppa_modal { background: linear-gradient(135deg, var(--teal), #0d5a58); }
@@ -167,15 +161,6 @@ button, input, select, textarea {
 .mb-nav-indicator { position:absolute; top:6px; height:calc(100% - 12px); width:25%; background: var(--gold-soft); border-radius:14px; transition: left .35s cubic-bezier(.4,0,.2,1); z-index:0; }
 .mb-navitem { position:relative; z-index:1; flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 0; background:none; border:none; color: var(--ink-soft); cursor:pointer; font-family:inherit; font-size:11.5px; font-weight:600; transition: color .25s ease; }
 .mb-navitem.active { color: var(--gold); }
-.mb-navitem-fab {
-  position:absolute; left:50%; top:-24px; transform: translateX(-50%);
-  width:54px; height:54px; border-radius:50%; z-index:2;
-  background: linear-gradient(135deg, var(--gold), var(--purple2)); color:#fff;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  box-shadow: 0 10px 22px rgba(76,57,163,0.4); border: 4px solid var(--surface);
-  transition: transform .15s ease;
-}
-.mb-navitem-fab:active { transform: translateX(-50%) scale(0.9); }
 
 .mb-backdrop { position:absolute; inset:0; background: rgba(0,0,0,0.5); display:flex; align-items:flex-end; z-index:20; animation: backdropIn .25s ease; }
 @keyframes backdropIn { from{opacity:0} to{opacity:1} }
@@ -327,4 +312,19 @@ button, input, select, textarea {
   display:flex; align-items:center; justify-content:center; cursor:pointer; transition: transform .15s ease;
 }
 .mb-iconbtn-lg:active { transform: scale(0.9); }
+
+/* Tambahan: kalkulator mini di form Jumlah */
+.mb-calc { background: var(--ink); border-radius: 20px; padding: 14px; }
+.mb-calc-screen { text-align: right; padding: 10px 8px 16px; }
+.mb-calc-expr { font-size: 26px; font-weight: 700; color: #fff; word-break: break-all; line-height: 1.2; }
+.mb-calc-preview { font-size: 14px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+.mb-calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.mb-calc-key {
+  background: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 50%;
+  aspect-ratio: 1; font-size: 19px; font-weight: 600; cursor: pointer; transition: transform .12s ease, background .15s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.mb-calc-key.fn { background: rgba(255,255,255,0.16); color: #fff; font-size: 16px; }
+.mb-calc-key.op { background: var(--gold); color: #fff; font-size: 22px; }
+.mb-calc-key:active { transform: scale(0.88); filter: brightness(1.15); }
 `;
