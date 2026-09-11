@@ -377,7 +377,12 @@ function MiniCalculator({ onUse, onClose }) {
     setExpr((e) => e + val);
   }
 
-  const keys = ["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "C", "0", ".", "+"];
+  const rows = [
+    [{ k: "C", type: "fn" }, { k: "DEL", label: "⌫", type: "fn" }, { k: "00", type: "fn" }, { k: "/", label: "÷", type: "op" }],
+    [{ k: "7" }, { k: "8" }, { k: "9" }, { k: "*", label: "×", type: "op" }],
+    [{ k: "4" }, { k: "5" }, { k: "6" }, { k: "-", label: "−", type: "op" }],
+    [{ k: "1" }, { k: "2" }, { k: "3" }, { k: "+", type: "op" }],
+  ];
 
   return (
     <div className="mb-calc">
@@ -388,12 +393,19 @@ function MiniCalculator({ onUse, onClose }) {
         )}
       </div>
       <div className="mb-calc-grid">
-        {keys.map((k) => (
-          <button key={k} className={`mb-calc-key ${"+-*/".includes(k) ? "op" : ""}`} onClick={() => press(k)}>
-            {k === "*" ? "×" : k === "/" ? "÷" : k}
+        {rows.flat().map((b) => (
+          <button key={b.k} className={`mb-calc-key ${b.type === "op" ? "op" : b.type === "fn" ? "fn" : ""}`} onClick={() => press(b.k)}>
+            {b.label || b.k}
           </button>
         ))}
-        <button className="mb-calc-key" onClick={() => press("DEL")}>⌫</button>
+        <button
+          className="mb-calc-key"
+          style={{ gridColumn: "span 2", aspectRatio: "auto", borderRadius: 999, justifyContent: "flex-start", paddingLeft: 22 }}
+          onClick={() => press("0")}
+        >
+          0
+        </button>
+        <button className="mb-calc-key" onClick={() => press(".")}>.</button>
         <button className="mb-calc-key op" onClick={() => press("=")}>=</button>
       </div>
       <div className="mb-two-col" style={{ marginTop: 10 }}>
