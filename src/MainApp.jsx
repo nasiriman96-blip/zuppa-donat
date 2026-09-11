@@ -5,7 +5,7 @@ import {
 import {
   Sun, Moon, Plus, Minus, X, Search, ArrowUpRight, ArrowDownLeft,
   Check, ChevronRight, Wallet, LayoutDashboard, ShoppingBag, History,
-  ArrowLeftRight, Cat, Coins, Receipt, LogOut, Send, Copy, Share2, Pencil,
+  ArrowLeftRight, Cat, Coins, Receipt, LogOut, Send, Copy, Share2, Pencil, Calculator,
 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient";
 
@@ -349,10 +349,73 @@ function Sheet({ open, onClose, title, children }) {
   );
 }
 
+function safeCalc(expr) {
+  const cleaned = expr.replace(/[^0-9+\-*/.()]/g, "");
+  if (!cleaned) return null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const result = Function(`"use strict"; return (${cleaned});`)();
+    if (typeof result !== "number" || !isFinite(result)) return null;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function MiniCalculator({ onUse, onClose }) {
+  const [expr, setExpr] = useState("");
+  const preview = expr ? safeCalc(expr) : null;
+
+  function press(val) {
+    if (val === "C") return setExpr("");
+    if (val === "DEL") return setExpr((e) => e.slice(0, -1));
+    if (val === "=") {
+      const r = safeCalc(expr);
+      if (r !== null) setExpr(String(Math.round(r * 100) / 100));
+      return;
+    }
+    setExpr((e) => e + val);
+  }
+
+  const keys = ["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "C", "0", ".", "+"];
+
+  return (
+    <div className="mb-calc">
+      <div className="mb-calc-screen">
+        <div className="mb-calc-expr">{expr || "0"}</div>
+        {preview !== null && preview !== undefined && String(preview) !== expr && (
+          <div className="mb-calc-preview">= {fmtAngka(preview)}</div>
+        )}
+      </div>
+      <div className="mb-calc-grid">
+        {keys.map((k) => (
+          <button key={k} className={`mb-calc-key ${"+-*/".includes(k) ? "op" : ""}`} onClick={() => press(k)}>
+            {k === "*" ? "×" : k === "/" ? "÷" : k}
+          </button>
+        ))}
+        <button className="mb-calc-key" onClick={() => press("DEL")}>⌫</button>
+        <button className="mb-calc-key op" onClick={() => press("=")}>=</button>
+      </div>
+      <div className="mb-two-col" style={{ marginTop: 10 }}>
+        <button className="mb-action-btn red" onClick={onClose}>Batal</button>
+        <button
+          className="mb-submit-btn"
+          style={{ "--accent": "var(--gold)", marginTop: 0 }}
+          disabled={preview === null || preview === undefined}
+          onClick={() => { if (preview !== null) onUse(Math.round(preview)); }}
+        >
+          Pakai Hasil
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, helper }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [dateVal, setDateVal] = useState(toLocalDatetimeInputValue(new Date().toISOString()));
+  const [showCalc, setShowCalc] = useState(false);
   const numeric = Number(amount.replace(/\D/g, "")) || 0;
 
   return (
@@ -367,11 +430,28 @@ function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, h
         onChange={(e) => setDateVal(e.target.value)}
       />
       <label className="mb-form-label">Jumlah</label>
-      <div className="mb-amount-input" style={{ "--accent": accent }}>
-        <span>Rp</span>
-        <RupiahInput value={amount} onChange={setAmount} placeholder="0" />
+      <div style={{ display: "flex", gap: 8, marginBottom: showCalc ? 10 : 0 }}>
+        <div className="mb-amount-input" style={{ "--accent": accent, flex: 1, marginBottom: 0 }}>
+          <span>Rp</span>
+          <RupiahInput value={amount} onChange={setAmount} placeholder="0" />
+        </div>
+        <button
+          type="button"
+          className="mb-iconbtn-lg"
+          style={{ flexShrink: 0 }}
+          onClick={() => setShowCalc((s) => !s)}
+          aria-label="Buka kalkulator"
+        >
+          <Calculator size={18} />
+        </button>
       </div>
-      <label className="mb-form-label">Catatan (opsional)</label>
+      {showCalc && (
+        <MiniCalculator
+          onUse={(val) => { setAmount(String(val)); setShowCalc(false); }}
+          onClose={() => setShowCalc(false)}
+        />
+      )}
+      <label className="mb-form-label" style={{ marginTop: 14 }}>Catatan (opsional)</label>
       <input className="mb-text-input" placeholder={noteholder} value={note} onChange={(e) => setNote(e.target.value)} />
       <button
         className="mb-submit-btn"
