@@ -683,8 +683,6 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
                 categoryToday={categoryToday}
                 transactions={transactions.slice(0, 5)}
                 userEmail={userEmail}
-                onOpenSheet={(s) => setSheet(s)}
-                onNavigate={(t) => setTab(t)}
               />
             )}
             {tab === "kasir" && (
@@ -740,9 +738,6 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
               </button>
             );
           })}
-          <button className="mb-navitem-fab" onClick={() => setTab("kasir")} aria-label="Jual cepat">
-            <Plus size={24} />
-          </button>
         </div>
 
       {/* ---- Sheets ---- */}
@@ -1255,7 +1250,7 @@ function EditTxForm({ tx, onSubmit }) {
 /* Screens                                                            */
 /* ---------------------------------------------------------------- */
 
-function Dashboard({ wallets, chartData, todayRevenue, todayCount, categoryToday, transactions, userEmail, onOpenSheet, onNavigate }) {
+function Dashboard({ wallets, chartData, todayRevenue, todayCount, categoryToday, transactions, userEmail }) {
   const dateStr = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
   const totalSaldo = wallets.zuppa_modal + wallets.zuppa_untung + wallets.donat_modal + wallets.donat_untung;
   const initial = (userEmail || "?").charAt(0).toUpperCase();
@@ -1282,25 +1277,6 @@ function Dashboard({ wallets, chartData, todayRevenue, todayCount, categoryToday
         <div className="mb-hero-sub">
           <ShoppingBag size={13} /> {todayCount} transaksi hari ini
         </div>
-      </div>
-
-      <div className="mb-quick-row">
-        <button className="mb-quick-btn" onClick={() => onNavigate("kasir")}>
-          <div className="mb-quick-icon"><ShoppingBag size={20} /></div>
-          <span className="mb-quick-label">Jual</span>
-        </button>
-        <button className="mb-quick-btn" onClick={() => onOpenSheet("addModal")}>
-          <div className="mb-quick-icon"><ArrowDownLeft size={20} /></div>
-          <span className="mb-quick-label">Setor</span>
-        </button>
-        <button className="mb-quick-btn" onClick={() => onOpenSheet("withdraw")}>
-          <div className="mb-quick-icon"><ArrowUpRight size={20} /></div>
-          <span className="mb-quick-label">Tarik</span>
-        </button>
-        <button className="mb-quick-btn" onClick={() => onNavigate("dompet")}>
-          <div className="mb-quick-icon"><Wallet size={20} /></div>
-          <span className="mb-quick-label">Dompet</span>
-        </button>
       </div>
 
       <div className="mb-stats-row">
