@@ -371,13 +371,6 @@ function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, h
         <span>Rp</span>
         <RupiahInput value={amount} onChange={setAmount} placeholder="0" />
       </div>
-      <div className="mb-quick-row">
-        {quickAmounts.map((q) => (
-          <button key={q} className="mb-chip" onClick={() => setAmount(String(q))}>
-            {q >= 1000000 ? `${q / 1000000}jt` : `${q / 1000}rb`}
-          </button>
-        ))}
-      </div>
       <label className="mb-form-label">Catatan (opsional)</label>
       <input className="mb-text-input" placeholder={noteholder} value={note} onChange={(e) => setNote(e.target.value)} />
       <button
