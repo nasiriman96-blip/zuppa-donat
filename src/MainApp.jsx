@@ -428,6 +428,113 @@ function MiniCalculator({ onUse, onClose }) {
   );
 }
 
+function MultiExpenseForm({ onSubmit }) {
+  const [dateVal, setDateVal] = useState(toLocalDatetimeInputValue(new Date().toISOString()));
+  const [rows, setRows] = useState([{ id: 1, note: "", amount: "" }]);
+  const [calcFor, setCalcFor] = useState(null);
+
+  function addRow() {
+    setRows((r) => [...r, { id: Date.now(), note: "", amount: "" }]);
+  }
+  function removeRow(id) {
+    setRows((r) => r.filter((row) => row.id !== id));
+  }
+  function updateRow(id, patch) {
+    setRows((r) => r.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
+  const amountOf = (r) => Number(String(r.amount).replace(/\D/g, "")) || 0;
+  const validRows = rows.filter((r) => amountOf(r) > 0);
+  const total = validRows.reduce((s, r) => s + amountOf(r), 0);
+
+  function handleSubmit() {
+    const isoDate = new Date(dateVal).toISOString();
+    onSubmit(
+      validRows.map((r) => ({
+        type: "pengeluaran",
+        amount: amountOf(r),
+        note: r.note.trim() || null,
+        date: isoDate,
+      }))
+    );
+  }
+
+  return (
+    <div className="mb-form">
+      <label className="mb-form-label">Tanggal & Waktu</label>
+      <input
+        type="datetime-local"
+        className="mb-text-input"
+        style={{ marginBottom: 16 }}
+        value={dateVal}
+        onChange={(e) => setDateVal(e.target.value)}
+      />
+
+      {rows.map((row, idx) => (
+        <div key={row.id} className="mb-expense-row-card">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span className="mb-form-label" style={{ marginBottom: 0 }}>Pengeluaran {idx + 1}</span>
+            {rows.length > 1 && (
+              <button type="button" className="mb-tx-delete" onClick={() => removeRow(row.id)} aria-label="Hapus baris">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+          <input
+            className="mb-text-input"
+            style={{ marginBottom: 10 }}
+            placeholder="mis. beli bahan baku"
+            value={row.note}
+            onChange={(e) => updateRow(row.id, { note: e.target.value })}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <div className="mb-amount-input" style={{ "--accent": "var(--red)", flex: 1, marginBottom: 0 }}>
+              <span>Rp</span>
+              <RupiahInput value={row.amount} onChange={(v) => updateRow(row.id, { amount: v })} placeholder="0" />
+            </div>
+            <button
+              type="button"
+              className="mb-iconbtn-lg"
+              style={{ flexShrink: 0 }}
+              onClick={() => setCalcFor(row.id)}
+              aria-label="Buka kalkulator"
+            >
+              <Calculator size={18} />
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {calcFor !== null && (
+        <MiniCalculator
+          onUse={(val) => { updateRow(calcFor, { amount: String(val) }); setCalcFor(null); }}
+          onClose={() => setCalcFor(null)}
+        />
+      )}
+
+      <button type="button" className="mb-action-btn gold" style={{ marginBottom: 16 }} onClick={addRow}>
+        <Plus size={16} /> Tambah Pengeluaran Lain
+      </button>
+
+      {validRows.length > 0 && (
+        <div className="mb-summary-row" style={{ marginBottom: 14 }}>
+          <span>Total ({validRows.length} pengeluaran)</span>
+          <span>{rupiah(total)}</span>
+        </div>
+      )}
+
+      <button
+        className="mb-submit-btn"
+        style={{ "--accent": "var(--red)" }}
+        disabled={validRows.length === 0}
+        onClick={handleSubmit}
+      >
+        {validRows.length > 1 ? `Catat ${validRows.length} Pengeluaran` : "Catat Pengeluaran"}
+      </button>
+    </div>
+  );
+}
+
 function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, helper }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -665,6 +772,17 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
       return;
     }
     setTransactions((prev) => [data, ...prev]);
+  }
+
+  async function pushManyTx(txList) {
+    if (txList.length === 0) return;
+    const payloads = txList.map((tx) => ({ date: new Date().toISOString(), created_by: userId, ...tx }));
+    const { data, error } = await supabase.from("zd_transactions").insert(payloads).select();
+    if (error) {
+      alert("Gagal menyimpan transaksi: " + error.message);
+      return;
+    }
+    setTransactions((prev) => [...data, ...prev]);
   }
 
   async function deleteTransaction(id) {
@@ -947,12 +1065,11 @@ export default function MainApp({ isAdmin, userEmail, userId, onSignOut, dark, s
             <option key={w.id} value={w.id}>{w.label}</option>
           ))}
         </select>
-        <AmountForm
-          accent="var(--red)"
-          quickAmounts={[25000, 50000, 100000, 250000]}
-          noteholder="mis. beli bahan baku"
-          submitLabel="Catat Pengeluaran"
-          onSubmit={(amount, note, dateIso) => { pushTx({ type: "pengeluaran", amount, note, wallet: expenseWallet, date: dateIso }); setSheet(null); }}
+        <MultiExpenseForm
+          onSubmit={(list) => {
+            pushManyTx(list.map((item) => ({ ...item, wallet: expenseWallet })));
+            setSheet(null);
+          }}
         />
       </Sheet>
 

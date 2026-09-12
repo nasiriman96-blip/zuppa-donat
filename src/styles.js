@@ -186,6 +186,8 @@ button, input, select, textarea {
 
 .mb-cart-summary { border-top:1px solid var(--border); padding-top:12px; }
 .mb-summary-row { display:flex; justify-content:space-between; font-size:14.5px; font-weight:600; margin-bottom:6px; }
+
+.mb-expense-row-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 12px; }
 .mb-summary-row.muted { color: var(--ink-soft); font-weight:500; font-size:13.5px; }
 
 .mb-submit-btn { width:100%; margin-top:10px; padding:14px; border:none; border-radius:15px; background: var(--accent, var(--gold)); color:#fff; font-weight:700; font-size:15px; cursor:pointer; transition: transform .15s ease, opacity .2s ease; font-family:inherit; }
