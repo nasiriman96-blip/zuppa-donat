@@ -385,38 +385,43 @@ function MiniCalculator({ onUse, onClose }) {
   ];
 
   return (
-    <div className="mb-calc">
-      <div className="mb-calc-screen">
-        <div className="mb-calc-expr">{expr || "0"}</div>
-        {preview !== null && preview !== undefined && String(preview) !== expr && (
-          <div className="mb-calc-preview">= {fmtAngka(preview)}</div>
-        )}
-      </div>
-      <div className="mb-calc-grid">
-        {rows.flat().map((b) => (
-          <button key={b.k} className={`mb-calc-key ${b.type === "op" ? "op" : b.type === "fn" ? "fn" : ""}`} onClick={() => press(b.k)}>
-            {b.label || b.k}
+    <div className="mb-calc-overlay" onClick={onClose}>
+      <div className="mb-calc-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-calc-modal-head">
+          <h4>Kalkulator</h4>
+          <button className="mb-calc-close" onClick={onClose}><X size={16} /></button>
+        </div>
+
+        <div className="mb-calc-screen">
+          <div className="mb-calc-expr">{expr || "0"}</div>
+          {preview !== null && preview !== undefined && String(preview) !== expr && (
+            <div className="mb-calc-preview">= Rp {fmtAngka(preview)}</div>
+          )}
+        </div>
+
+        <div className="mb-calc-grid">
+          {rows.flat().map((b) => (
+            <button key={b.k} className={`mb-calc-key ${b.type === "op" ? "op" : b.type === "fn" ? "fn" : ""}`} onClick={() => press(b.k)}>
+              {b.label || b.k}
+            </button>
+          ))}
+          <button
+            className="mb-calc-key"
+            style={{ gridColumn: "span 2", aspectRatio: "auto", borderRadius: 999, justifyContent: "flex-start", paddingLeft: 22 }}
+            onClick={() => press("0")}
+          >
+            0
           </button>
-        ))}
+          <button className="mb-calc-key" onClick={() => press(".")}>.</button>
+          <button className="mb-calc-key op" onClick={() => press("=")}>=</button>
+        </div>
+
         <button
-          className="mb-calc-key"
-          style={{ gridColumn: "span 2", aspectRatio: "auto", borderRadius: 999, justifyContent: "flex-start", paddingLeft: 22 }}
-          onClick={() => press("0")}
-        >
-          0
-        </button>
-        <button className="mb-calc-key" onClick={() => press(".")}>.</button>
-        <button className="mb-calc-key op" onClick={() => press("=")}>=</button>
-      </div>
-      <div className="mb-two-col" style={{ marginTop: 10 }}>
-        <button className="mb-action-btn red" onClick={onClose}>Batal</button>
-        <button
-          className="mb-submit-btn"
-          style={{ "--accent": "var(--gold)", marginTop: 0 }}
+          className="mb-calc-use-btn"
           disabled={preview === null || preview === undefined}
           onClick={() => { if (preview !== null) onUse(Math.round(preview)); }}
         >
-          Pakai Hasil
+          Gunakan Nominal Ini
         </button>
       </div>
     </div>
@@ -442,7 +447,7 @@ function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, h
         onChange={(e) => setDateVal(e.target.value)}
       />
       <label className="mb-form-label">Jumlah</label>
-      <div style={{ display: "flex", gap: 8, marginBottom: showCalc ? 10 : 0 }}>
+      <div style={{ display: "flex", gap: 8 }}>
         <div className="mb-amount-input" style={{ "--accent": accent, flex: 1, marginBottom: 0 }}>
           <span>Rp</span>
           <RupiahInput value={amount} onChange={setAmount} placeholder="0" />
@@ -451,7 +456,7 @@ function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, h
           type="button"
           className="mb-iconbtn-lg"
           style={{ flexShrink: 0 }}
-          onClick={() => setShowCalc((s) => !s)}
+          onClick={() => setShowCalc(true)}
           aria-label="Buka kalkulator"
         >
           <Calculator size={18} />
