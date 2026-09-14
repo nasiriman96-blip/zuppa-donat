@@ -122,6 +122,12 @@ function combineDateWithNow(dateStr) {
   return new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 }
 
+function combineDateWithTime(dateStr, timeSourceIso) {
+  const t = new Date(timeSourceIso);
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds()).toISOString();
+}
+
 function toLocalDatetimeInputValue(iso) {
   const d = new Date(iso);
   const pad = (n) => String(n).padStart(2, "0");
@@ -429,7 +435,7 @@ function MiniCalculator({ onUse, onClose }) {
 }
 
 function MultiExpenseForm({ onSubmit }) {
-  const [dateVal, setDateVal] = useState(toLocalDatetimeInputValue(new Date().toISOString()));
+  const [dateVal, setDateVal] = useState(todayInputDate());
   const [rows, setRows] = useState([{ id: 1, note: "", amount: "" }]);
   const [calcFor, setCalcFor] = useState(null);
 
@@ -448,7 +454,7 @@ function MultiExpenseForm({ onSubmit }) {
   const total = validRows.reduce((s, r) => s + amountOf(r), 0);
 
   function handleSubmit() {
-    const isoDate = new Date(dateVal).toISOString();
+    const isoDate = combineDateWithNow(dateVal);
     onSubmit(
       validRows.map((r) => ({
         type: "pengeluaran",
@@ -461,9 +467,9 @@ function MultiExpenseForm({ onSubmit }) {
 
   return (
     <div className="mb-form">
-      <label className="mb-form-label">Tanggal & Waktu</label>
+      <label className="mb-form-label">Tanggal</label>
       <input
-        type="datetime-local"
+        type="date"
         className="mb-text-input"
         style={{ marginBottom: 16 }}
         value={dateVal}
@@ -538,16 +544,16 @@ function MultiExpenseForm({ onSubmit }) {
 function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, helper }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [dateVal, setDateVal] = useState(toLocalDatetimeInputValue(new Date().toISOString()));
+  const [dateVal, setDateVal] = useState(todayInputDate());
   const [showCalc, setShowCalc] = useState(false);
   const numeric = Number(amount.replace(/\D/g, "")) || 0;
 
   return (
     <div className="mb-form">
       {helper && <p className="mb-form-helper">{helper}</p>}
-      <label className="mb-form-label">Tanggal & Waktu</label>
+      <label className="mb-form-label">Tanggal</label>
       <input
-        type="datetime-local"
+        type="date"
         className="mb-text-input"
         style={{ marginBottom: 14 }}
         value={dateVal}
@@ -582,7 +588,7 @@ function AmountForm({ accent, quickAmounts, noteholder, submitLabel, onSubmit, h
         style={{ "--accent": accent }}
         disabled={numeric <= 0}
         onClick={() => {
-          onSubmit(numeric, note, new Date(dateVal).toISOString());
+          onSubmit(numeric, note, combineDateWithNow(dateVal));
           setAmount("");
           setNote("");
         }}
@@ -1325,8 +1331,14 @@ function LaporanForm({ transactions, products }) {
   );
 }
 
+function isoToInputDate(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function EditTxForm({ tx, onSubmit }) {
-  const [dateVal, setDateVal] = useState(toLocalDatetimeInputValue(tx.date));
+  const [dateVal, setDateVal] = useState(isoToInputDate(tx.date));
   const [note, setNote] = useState(tx.note || "");
   const [total, setTotal] = useState(String(tx.total || ""));
   const [hpp, setHpp] = useState(String(tx.hpp || ""));
@@ -1341,7 +1353,7 @@ function EditTxForm({ tx, onSubmit }) {
   const numAmount = Number(String(amount).replace(/\D/g, "")) || 0;
 
   function handleSubmit() {
-    const isoDate = new Date(dateVal).toISOString();
+    const isoDate = combineDateWithTime(dateVal, tx.date);
     let patch = { date: isoDate, note: note || null };
     if (tx.type === "penjualan") {
       patch = { ...patch, total: numTotal, hpp: numHpp, profit: numTotal - numHpp };
@@ -1359,9 +1371,9 @@ function EditTxForm({ tx, onSubmit }) {
 
   return (
     <div className="mb-form">
-      <label className="mb-form-label">Tanggal &amp; Waktu</label>
+      <label className="mb-form-label">Tanggal</label>
       <input
-        type="datetime-local"
+        type="date"
         className="mb-text-input"
         style={{ marginBottom: 16 }}
         value={dateVal}
