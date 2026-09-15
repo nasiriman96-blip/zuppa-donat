@@ -355,6 +355,14 @@ function Sheet({ open, onClose, title, children }) {
   );
 }
 
+function formatExprDisplay(expr) {
+  return expr.replace(/\d+(\.\d+)?/g, (numStr) => {
+    const [intPart, decPart] = numStr.split(".");
+    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return decPart !== undefined ? `${grouped},${decPart}` : grouped;
+  });
+}
+
 function safeCalc(expr) {
   const cleaned = expr.replace(/[^0-9+\-*/.()]/g, "");
   if (!cleaned) return null;
@@ -399,7 +407,7 @@ function MiniCalculator({ onUse, onClose }) {
         </div>
 
         <div className="mb-calc-screen">
-          <div className="mb-calc-expr">{expr || "0"}</div>
+          <div className="mb-calc-expr">{expr ? formatExprDisplay(expr) : "0"}</div>
           {preview !== null && preview !== undefined && String(preview) !== expr && (
             <div className="mb-calc-preview">= Rp {fmtAngka(preview)}</div>
           )}
